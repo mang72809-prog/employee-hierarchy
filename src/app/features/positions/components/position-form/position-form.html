@@ -1,0 +1,72 @@
+<div class="card mx-auto mt-5" style="max-width: 600px;">
+  <div class="card-header bg-primary text-white">
+    <h4 class="card-title mb-0">
+      <i class="fas" [class.fa-edit]="id" [class.fa-plus]="!id"></i>
+      {{ id ? 'Edit Position' : 'Add Position' }}
+    </h4>
+  </div>
+  
+  <div class="card-body">
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label class="form-label fw-bold">Name</label>
+        <input 
+          formControlName="name" 
+          class="form-control" 
+          [class.is-invalid]="form.get('name')?.invalid && form.get('name')?.touched"
+        />
+        <div class="invalid-feedback">
+          Please provide a valid name.
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-bold">Description</label>
+        <textarea 
+          formControlName="description" 
+          class="form-control" 
+          rows="3"
+          [class.is-invalid]="form.get('description')?.invalid && form.get('description')?.touched"
+        ></textarea>
+        <div class="invalid-feedback">
+          Please provide a description.
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label fw-bold">Parent Position (optional)</label>
+        <select 
+          formControlName="parentId" 
+          class="form-select"
+          [class.is-invalid]="form.get('parentId')?.invalid && form.get('parentId')?.touched"
+        >
+          <option [ngValue]="null">-- None (top-level) --</option>
+          <option *ngFor="let pos of positions" [ngValue]="pos.id" [disabled]="pos.id === id">
+            {{ pos.name }}
+          </option>
+        </select>
+        <div class="invalid-feedback">
+          Please select a valid parent position.
+        </div>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button
+          type="button"
+          class="btn btn-outline-secondary me-md-2"
+          (click)="onCancel()"
+        >
+          <i class="fas fa-times me-1"></i>Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="form.invalid"
+          class="btn btn-primary"
+        >
+          <i class="fas" [class.fa-save]="id" [class.fa-plus]="!id"></i>
+          {{ id ? 'Update' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

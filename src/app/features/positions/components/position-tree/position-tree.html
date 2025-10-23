@@ -1,0 +1,141 @@
+<ul class="list-group list-group-flush ms-4 border-start border-2 border-light ps-4">
+  <li *ngFor="let pos of positions" class="list-group-item bg-transparent px-0 py-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <!-- Toggle children button -->
+        <button *ngIf="pos.children?.length"
+                class="btn btn-sm btn-outline-primary me-1"
+                (click)="toggleChildren(pos.id)"
+                [title]="hiddenChildren.has(pos.id) ? 'Expand team' : 'Collapse team'">
+          <i class="fas" [class.fa-folder-open]="!hiddenChildren.has(pos.id)" 
+             [class.fa-folder]="hiddenChildren.has(pos.id)"></i>
+        </button>
+        
+        <span class="fw-bold">{{ pos.name }}</span>
+
+        <!-- Description toggle button -->
+        <button class="btn btn-sm btn-outline-secondary"
+                (click)="toggleDescription(pos.id)"
+                [title]="expandedDescriptions.has(pos.id) ? 'Hide details' : 'Show details'">
+          <i class="fas" [class.fa-info-circle]="expandedDescriptions.has(pos.id)" 
+             [class.fa-info]="!expandedDescriptions.has(pos.id)"></i>
+        </button>
+      </div>
+
+      <!-- Actions dropdown on the right -->
+      <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                type="button" 
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <!-- Add child only for non-root nodes -->
+          <li *ngIf="pos.parentId !== null && pos.parentId !== undefined">
+            <button class="dropdown-item" (click)="openAddChildModal(pos)">
+              <i class="fas fa-plus me-2"></i>Add Child
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item" (click)="edit(pos)">
+              <i class="fas fa-edit me-2"></i>Edit
+            </button>
+          </li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <button class="dropdown-item text-danger" (click)="openDeleteModal(pos)">
+              <i class="fas fa-trash me-2"></i>Delete
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div *ngIf="expandedDescriptions.has(pos.id)" class="mt-2 ms-4">
+      <div class="card bg-light border-0">
+        <div class="card-body py-2">
+          <p class="card-text text-muted mb-0">{{ pos.description }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Children -->
+    <div *ngIf="pos.children?.length && !hiddenChildren.has(pos.id)" class="mt-2">
+      <app-position-tree [positions]="pos.children || []"></app-position-tree>
+    </div>
+  </li>
+</ul>
+
+<!-- Success Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+  <div *ngIf="showSuccessMessage" class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header bg-success text-white">
+      <i class="fas fa-check-circle me-2"></i>
+      <strong class="me-auto">Success</strong>
+      <button type="button" class="btn-close btn-close-white" (click)="hideSuccessMessage()"></button>
+    </div>
+    <div class="toast-body">
+      {{ successMessage }}
+    </div>
+  </div>
+</div>
+
+<!-- Add Child Modal -->
+<div class="modal fade" id="addChildModal" tabindex="-1" [attr.aria-hidden]="!addingParent ? 'true' : null" [class.show]="addingParent" [style.display]="addingParent ? 'block' : 'none'">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Add Child Position</h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Position Name</label>
+          <input [(ngModel)]="childName" placeholder="Enter position name" class="form-control" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <input [(ngModel)]="childDescription" placeholder="Enter position description" class="form-control" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-success" (click)="addChild()" #addChildButton>Save Position</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" [attr.aria-hidden]="!deletingPosition ? 'true' : null" [class.show]="deletingPosition" [style.display]="deletingPosition ? 'block' : 'none'">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Deletion</h5>
+        <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning" role="alert">
+          <strong>Warning:</strong> This action cannot be undone.
+        </div>
+        
+        <div *ngIf="deletingPosition?.parentId === null || deletingPosition?.parentId === undefined" 
+             class="alert alert-danger" role="alert">
+          <strong>Root Node:</strong> Deleting this position will also remove all its children positions.
+        </div>
+        
+        <p class="mb-0">Are you sure you want to delete the position <strong class="text-danger">"{{ deletingPosition?.name }}"</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()" #deleteButton>Delete Position</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrops -->
+<div class="modal-backdrop fade show" *ngIf="addingParent" (click)="closeModal()"></div>
+<div class="modal-backdrop fade show" *ngIf="deletingPosition" (click)="closeModal()"></div>
